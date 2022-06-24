@@ -1,0 +1,39 @@
+name: file-reader-lambda
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  AWS_PAGER: ""
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.18.1'
+      - name: Unit tests
+        run: go test ./cmd/...
+      - name: Setup integration env
+        run: grep -o '^[^#]*' .env.example >> $GITHUB_ENV
+      - name: Integration tests
+        run: |
+          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          
+          ids=$(docker ps -a -q)
+          for id in $ids
+          do
+            echo "$id"
+            docker stop $id && docker rm $id
+          done
+          
+          make build-main
+          make local-deploy
+          go test ./test/...
+          make local-deploy-clean
+          docker compose down

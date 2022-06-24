@@ -1,0 +1,9 @@
+{
+    "LambdaFunctionConfigurations": [
+        {
+            "Id": "s3eventtriggerslambda",
+            "LambdaFunctionArn": "arn:aws:lambda:eu-west-1:000000000000:function:fileevent",
+            "Events": ["s3:ObjectCreated:*"]
+        }
+    ]
+}

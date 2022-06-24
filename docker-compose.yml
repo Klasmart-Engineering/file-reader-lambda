@@ -1,0 +1,39 @@
+version: '3.7'
+services:
+  redpanda:
+    command:
+     - redpanda start
+     - --overprovisioned
+     - --smp 1
+     - --memory 1G
+     - --reserve-memory 0M
+     - --node-id 0
+     - --check=false
+     - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+     - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+     - --pandaproxy-addr 0.0.0.0:8082
+     - --advertise-pandaproxy-addr redpanda:8082
+     - --set redpanda.enable_transactions=true
+     - --set redpanda.enable_idempotence=true
+
+    image: docker.vectorized.io/vectorized/redpanda:v21.11.13
+    container_name: redpanda-l
+    ports:
+     - 9092:9092
+     - 29092:29092 
+     - 8081:8081
+     - 8082:8082
+
+  localstack:
+    image: localstack/localstack:0.14.2
+    container_name: localstack-l
+    restart: always
+    environment:
+        - SERVICES=s3,lambda
+        - LAMBDA_EXECUTOR=docker
+        - DEFAULT_REGION=eu-west-1
+    ports:
+        - 4566:4566
+    volumes:
+        - ./scripts:/docker-entrypoint-initaws.d
+        - '/var/run/docker.sock:/var/run/docker.sock'    
